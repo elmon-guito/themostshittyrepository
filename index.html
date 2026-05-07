@@ -27,7 +27,6 @@
       overflow-x: hidden;
     }
 
-    /* Grid de fondo */
     body::before {
       content: '';
       position: fixed;
@@ -48,7 +47,6 @@
       z-index: 1;
     }
 
-    /* Header */
     header {
       margin-bottom: 56px;
       animation: fadeDown 0.6s ease both;
@@ -73,9 +71,7 @@
       letter-spacing: -0.02em;
     }
 
-    h1 span {
-      color: var(--accent);
-    }
+    h1 span { color: var(--accent); }
 
     .subtitle {
       margin-top: 12px;
@@ -84,7 +80,6 @@
       line-height: 1.6;
     }
 
-    /* Secciones */
     section {
       margin-bottom: 48px;
       animation: fadeUp 0.5s ease both;
@@ -93,6 +88,7 @@
     section:nth-child(2) { animation-delay: 0.1s; }
     section:nth-child(3) { animation-delay: 0.2s; }
     section:nth-child(4) { animation-delay: 0.3s; }
+    section:nth-child(5) { animation-delay: 0.4s; }
 
     .section-label {
       font-size: 11px;
@@ -112,7 +108,6 @@
       background: var(--border);
     }
 
-    /* Grid de botones */
     .btn-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -154,19 +149,8 @@
 
     .btn:hover::before { opacity: 0.05; }
 
-    .btn .icon {
-      font-size: 18px;
-      flex-shrink: 0;
-      position: relative;
-      z-index: 1;
-    }
-
-    .btn .label {
-      position: relative;
-      z-index: 1;
-      font-weight: 700;
-    }
-
+    .btn .icon { font-size: 18px; flex-shrink: 0; position: relative; z-index: 1; }
+    .btn .label { position: relative; z-index: 1; font-weight: 700; }
     .btn .arrow {
       margin-left: auto;
       font-size: 11px;
@@ -175,36 +159,21 @@
       z-index: 1;
       transition: opacity 0.18s, transform 0.18s;
     }
+    .btn:hover .arrow { opacity: 1; transform: translateX(3px); }
 
-    .btn:hover .arrow {
-      opacity: 1;
-      transform: translateX(3px);
-    }
-
-    /* Colores de acento por categoría */
-    .color-green { --btn-color: var(--accent); }
-    .color-pink  { --btn-color: var(--accent2); }
-    .color-blue  { --btn-color: var(--accent3); }
+    .color-green  { --btn-color: var(--accent); }
+    .color-pink   { --btn-color: var(--accent2); }
+    .color-blue   { --btn-color: var(--accent3); }
     .color-yellow { --btn-color: #ffe66e; }
 
-    /* Botones de descarga — más grandes */
     .download-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
       gap: 12px;
     }
 
-    .btn-download {
-      flex-direction: column;
-      align-items: flex-start;
-      padding: 18px 20px;
-    }
-
-    .btn-download .icon {
-      font-size: 24px;
-      margin-bottom: 6px;
-    }
-
+    .btn-download { flex-direction: column; align-items: flex-start; padding: 18px 20px; }
+    .btn-download .icon { font-size: 24px; margin-bottom: 6px; }
     .btn-download .desc {
       font-size: 11px;
       color: var(--muted);
@@ -213,11 +182,7 @@
       z-index: 1;
       transition: color 0.18s;
     }
-
-    .btn-download:hover .desc {
-      color: var(--btn-color, var(--accent));
-      opacity: 0.7;
-    }
+    .btn-download:hover .desc { color: var(--btn-color, var(--accent)); opacity: 0.7; }
 
     .badge-download {
       position: relative;
@@ -232,26 +197,11 @@
       display: inline-block;
       transition: border-color 0.18s, color 0.18s;
     }
-
     .btn-download:hover .badge-download {
       border-color: var(--btn-color, var(--accent));
       color: var(--btn-color, var(--accent));
     }
 
-  </section>
-    
-  <section>
-    <div class="section-label">Jueguitos</div>
-    <div class="btn-grid">
-      <a href="tetris.html" class="btn color-green">
-        <span class="icon">🟩</span>
-        <span class="label">Tetris</span>
-        <span class="arrow">→</span>
-      </a>
-    </div>
-  </section>
-    
-    /* Footer */
     footer {
       margin-top: 64px;
       padding-top: 24px;
@@ -263,7 +213,6 @@
       animation: fadeUp 0.5s 0.4s ease both;
     }
 
-    /* Animaciones */
     @keyframes fadeDown {
       from { opacity: 0; transform: translateY(-16px); }
       to   { opacity: 1; transform: translateY(0); }
@@ -274,7 +223,6 @@
       to   { opacity: 1; transform: translateY(0); }
     }
 
-    /* Scrollbar */
     ::-webkit-scrollbar { width: 4px; }
     ::-webkit-scrollbar-track { background: var(--bg); }
     ::-webkit-scrollbar-thumb { background: var(--border); }
@@ -311,7 +259,7 @@
     </div>
   </section>
 
-  <!-- HERRAMIENTAS / SITIOS QUE USO -->
+  <!-- OTRAS COSAS -->
   <section>
     <div class="section-label">otras caquitas</div>
     <div class="btn-grid">
@@ -369,6 +317,18 @@
     </div>
   </section>
 
+  <!-- JUEGUITOS -->
+  <section>
+    <div class="section-label">Jueguitos</div>
+    <div class="btn-grid">
+      <a href="tetris.html" class="btn color-green">
+        <span class="icon">🟩</span>
+        <span class="label">Tetris</span>
+        <span class="arrow">→</span>
+      </a>
+    </div>
+  </section>
+
   <footer>
     <span>hecho por mí ✦</span>
     <span id="fecha"></span>
@@ -377,7 +337,6 @@
 </div>
 
 <script>
-  // Fecha actual en el footer
   const d = new Date();
   document.getElementById('fecha').textContent = d.getFullYear();
 </script>
