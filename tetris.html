@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
   <title>TETRIS</title>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet"/>
   <style>
@@ -15,7 +15,7 @@
       --text: #e0e0ff;
       --muted: #444466;
     }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     body {
       background: var(--bg);
       color: var(--text);
@@ -24,9 +24,10 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
+      justify-content: flex-start;
       overflow-x: hidden;
-      padding: 20px 0 40px;
+      padding: 16px 8px 120px;
+      touch-action: none;
     }
     body::before {
       content: '';
@@ -38,104 +39,162 @@
       pointer-events: none;
     }
     h1 {
-      font-size: 28px;
+      font-size: clamp(16px, 5vw, 28px);
       letter-spacing: 0.3em;
       color: var(--glow);
-      text-shadow: 0 0 20px var(--glow), 0 0 40px var(--glow);
-      margin-bottom: 20px;
+      text-shadow: 0 0 20px var(--glow);
+      margin-bottom: 12px;
       animation: pulse 2s ease-in-out infinite;
     }
     @keyframes pulse {
-      0%,100% { text-shadow: 0 0 20px var(--glow), 0 0 40px var(--glow); }
-      50%      { text-shadow: 0 0 30px var(--glow), 0 0 60px var(--glow), 0 0 80px var(--glow); }
+      0%,100% { text-shadow: 0 0 20px var(--glow); }
+      50%      { text-shadow: 0 0 40px var(--glow), 0 0 60px var(--glow); }
     }
-    .game-wrapper { display: flex; gap: 20px; align-items: flex-start; position: relative; z-index: 1; }
-    #board {
-      border: 2px solid var(--glow);
-      box-shadow: 0 0 20px rgba(0,255,204,0.3), inset 0 0 20px rgba(0,0,0,0.5);
-      display: block;
-      background: #050510;
-    }
-    .panel { display: flex; flex-direction: column; gap: 14px; width: 140px; }
-    .box { background: var(--panel); border: 1px solid var(--border); padding: 12px; }
-    .box-title { font-size: 7px; color: var(--muted); letter-spacing: 0.15em; margin-bottom: 8px; }
-    .box-value { font-size: 14px; color: var(--glow); text-shadow: 0 0 10px var(--glow); }
-    #next-canvas { display: block; margin-top: 8px; }
-    #level-display { color: var(--glow2); text-shadow: 0 0 10px var(--glow2); }
-    .controls { font-size: 6px; color: var(--muted); line-height: 2.2; }
-    .controls span { color: var(--text); }
 
-    /* LEADERBOARD */
-    .leaderboard {
-      margin-top: 28px;
-      width: 100%;
-      max-width: 500px;
-      background: var(--panel);
-      border: 1px solid var(--border);
-      padding: 20px;
+    /* LAYOUT PRINCIPAL */
+    .game-wrapper {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
       position: relative;
       z-index: 1;
     }
-    .lb-title {
-      font-size: 10px;
-      color: var(--glow2);
-      text-shadow: 0 0 10px var(--glow2);
-      letter-spacing: 0.2em;
-      margin-bottom: 16px;
-      text-align: center;
+
+    #board {
+      border: 2px solid var(--glow);
+      box-shadow: 0 0 20px rgba(0,255,204,0.3);
+      display: block;
+      background: #050510;
     }
-    .lb-row {
+
+    .panel {
       display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 8px 0;
-      border-bottom: 1px solid var(--border);
-      font-size: 8px;
-      animation: fadeIn 0.3s ease both;
+      flex-direction: column;
+      gap: 8px;
+      width: 80px;
     }
+
+    .box {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      padding: 8px;
+    }
+
+    .box-title { font-size: 5px; color: var(--muted); letter-spacing: 0.1em; margin-bottom: 4px; }
+    .box-value { font-size: clamp(8px, 2.5vw, 12px); color: var(--glow); text-shadow: 0 0 8px var(--glow); }
+    #level-display { color: var(--glow2); text-shadow: 0 0 8px var(--glow2); }
+    #next-canvas { display: block; margin-top: 4px; }
+
+    /* LEADERBOARD */
+    .leaderboard {
+      margin-top: 16px;
+      width: 100%;
+      max-width: 400px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      padding: 14px;
+      position: relative;
+      z-index: 1;
+    }
+    .lb-title { font-size: 8px; color: var(--glow2); text-shadow: 0 0 10px var(--glow2); letter-spacing: 0.15em; margin-bottom: 12px; text-align: center; }
+    .lb-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 7px; }
     .lb-row:last-child { border-bottom: none; }
-    .lb-rank { width: 24px; color: var(--muted); text-align: center; flex-shrink: 0; }
+    .lb-rank { width: 20px; color: var(--muted); text-align: center; flex-shrink: 0; }
     .lb-rank.gold   { color: #ffd700; text-shadow: 0 0 8px #ffd700; }
     .lb-rank.silver { color: #c0c0c0; }
     .lb-rank.bronze { color: #cd7f32; }
     .lb-name  { flex: 1; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .lb-score { color: var(--glow); text-shadow: 0 0 8px var(--glow); flex-shrink: 0; }
-    .lb-empty { font-size: 7px; color: var(--muted); text-align: center; padding: 16px 0; }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateX(-8px); }
-      to   { opacity: 1; transform: translateX(0); }
+    .lb-score { color: var(--glow); text-shadow: 0 0 6px var(--glow); flex-shrink: 0; }
+    .lb-empty { font-size: 6px; color: var(--muted); text-align: center; padding: 12px 0; }
+
+    /* CONTROLES TÁCTILES */
+    .touch-controls {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 16px 16px;
+      background: linear-gradient(transparent, rgba(8,8,15,0.95));
+      z-index: 100;
+      gap: 8px;
     }
+
+    .touch-group {
+      display: flex;
+      gap: 8px;
+    }
+
+    .touch-btn {
+      width: 56px;
+      height: 56px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      color: var(--glow);
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      border-radius: 4px;
+      user-select: none;
+      transition: background 0.1s, border-color 0.1s;
+      -webkit-user-select: none;
+    }
+
+    .touch-btn:active, .touch-btn.pressed {
+      background: rgba(0,255,204,0.15);
+      border-color: var(--glow);
+    }
+
+    .touch-btn.btn-drop {
+      width: 56px;
+      color: var(--glow2);
+      border-color: var(--glow2);
+      font-size: 14px;
+    }
+    .touch-btn.btn-drop:active { background: rgba(255,0,170,0.15); }
+
+    .touch-btn.btn-rotate {
+      color: #ffdd00;
+      border-color: #ffdd00;
+    }
+    .touch-btn.btn-rotate:active { background: rgba(255,221,0,0.15); }
 
     /* OVERLAY */
     #overlay {
       position: fixed;
       inset: 0;
-      background: rgba(8,8,15,0.92);
+      background: rgba(8,8,15,0.93);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 20px;
-      z-index: 10;
+      gap: 16px;
+      z-index: 200;
+      padding: 20px;
     }
-    #overlay h2 { font-size: 20px; color: var(--glow2); text-shadow: 0 0 20px var(--glow2); letter-spacing: 0.2em; }
-    #overlay p  { font-size: 8px; color: var(--muted); letter-spacing: 0.1em; }
-    .score-display { font-size: 11px; color: var(--glow); }
+    #overlay h2 { font-size: clamp(14px, 4vw, 20px); color: var(--glow2); text-shadow: 0 0 20px var(--glow2); letter-spacing: 0.2em; text-align: center; }
+    #overlay p  { font-size: 7px; color: var(--muted); letter-spacing: 0.1em; text-align: center; }
+    .score-display { font-size: clamp(10px, 3vw, 14px); color: var(--glow); }
+
     #btn-start {
       font-family: 'Press Start 2P', monospace;
-      font-size: 10px;
+      font-size: clamp(8px, 2.5vw, 11px);
       padding: 14px 28px;
       background: transparent;
       border: 2px solid var(--glow);
       color: var(--glow);
       cursor: pointer;
-      letter-spacing: 0.15em;
+      letter-spacing: 0.1em;
       transition: all 0.15s;
-      box-shadow: 0 0 10px rgba(0,255,204,0.2);
     }
-    #btn-start:hover { background: var(--glow); color: var(--bg); box-shadow: 0 0 30px rgba(0,255,204,0.5); }
-    .name-form { display: flex; flex-direction: column; align-items: center; gap: 12px; }
-    .name-form label { font-size: 7px; color: var(--muted); letter-spacing: 0.15em; }
+    #btn-start:active { background: var(--glow); color: var(--bg); }
+
+    .name-form { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; max-width: 280px; }
+    .name-form label { font-size: 6px; color: var(--muted); letter-spacing: 0.15em; }
     #name-input {
       font-family: 'Press Start 2P', monospace;
       font-size: 11px;
@@ -144,9 +203,8 @@
       border: 1px solid var(--glow);
       color: var(--glow);
       text-align: center;
-      letter-spacing: 0.1em;
       outline: none;
-      width: 220px;
+      width: 100%;
     }
     #name-input::placeholder { color: var(--muted); }
     #btn-submit {
@@ -159,18 +217,17 @@
       cursor: pointer;
       transition: all 0.15s;
     }
-    #btn-submit:hover { background: var(--glow2); color: var(--bg); }
+    #btn-submit:active { background: var(--glow2); color: var(--bg); }
+
     .back-link {
       position: fixed;
-      top: 20px; left: 20px;
-      font-size: 8px;
+      top: 12px; left: 12px;
+      font-size: 7px;
       color: var(--muted);
       text-decoration: none;
+      z-index: 300;
       letter-spacing: 0.1em;
-      transition: color 0.15s;
-      z-index: 20;
     }
-    .back-link:hover { color: var(--text); }
   </style>
 </head>
 <body>
@@ -183,16 +240,8 @@
   <div class="panel">
     <div class="box"><div class="box-title">SCORE</div><div class="box-value" id="score-display">0</div></div>
     <div class="box"><div class="box-title">NIVEL</div><div class="box-value" id="level-display">1</div></div>
-    <div class="box"><div class="box-title">LÍNEAS</div><div class="box-value" id="lines-display">0</div></div>
-    <div class="box"><div class="box-title">SIGUIENTE</div><canvas id="next-canvas" width="80" height="80"></canvas></div>
-    <div class="box controls">
-      <div class="box-title">CONTROLES</div>
-      <span>←→</span> mover<br/>
-      <span>↑</span> rotar<br/>
-      <span>↓</span> bajar<br/>
-      <span>SPACE</span> caída<br/>
-      <span>P</span> pausa
-    </div>
+    <div class="box"><div class="box-title">LINEAS</div><div class="box-value" id="lines-display">0</div></div>
+    <div class="box"><div class="box-title">NEXT</div><canvas id="next-canvas" width="64" height="64"></canvas></div>
   </div>
 </div>
 
@@ -201,14 +250,28 @@
   <div id="lb-list"><div class="lb-empty">Cargando...</div></div>
 </div>
 
+<!-- Controles táctiles -->
+<div class="touch-controls" id="touch-controls" style="display:none">
+  <div class="touch-group">
+    <div class="touch-btn" id="btn-left">◀</div>
+    <div class="touch-btn" id="btn-right">▶</div>
+  </div>
+  <div class="touch-group">
+    <div class="touch-btn btn-rotate" id="btn-rotate">↻</div>
+    <div class="touch-btn" id="btn-down">▼</div>
+    <div class="touch-btn btn-drop" id="btn-drop">DROP</div>
+  </div>
+</div>
+
+<!-- Overlay -->
 <div id="overlay">
   <h2 id="overlay-title">TETRIS</h2>
-  <p id="overlay-sub">PRESIONÁ PARA EMPEZAR</p>
+  <p id="overlay-sub">TOCÁ PARA EMPEZAR</p>
   <div class="score-display" id="overlay-score"></div>
   <div id="name-section" style="display:none" class="name-form">
     <label>TU NOMBRE</label>
     <input id="name-input" maxlength="12" placeholder="JUGADOR" autocomplete="off"/>
-    <button id="btn-submit">GUARDAR PUNTAJE</button>
+    <button id="btn-submit">GUARDAR</button>
   </div>
   <button id="btn-start">JUGAR</button>
 </div>
@@ -232,13 +295,20 @@
   const db = getDatabase(app);
   const scoresRef = ref(db, 'scores');
 
-  const COLS = 12, ROWS = 24, BLOCK = 20;
+  // Tamaño adaptable
+  const isMobile = window.innerWidth < 600;
+  const BLOCK = isMobile ? Math.floor((window.innerWidth - 120) / 12) : 20;
+  const COLS = 12, ROWS = 24;
+
   const canvas = document.getElementById('board');
   const ctx = canvas.getContext('2d');
   const nextCanvas = document.getElementById('next-canvas');
   const nctx = nextCanvas.getContext('2d');
   canvas.width = COLS * BLOCK;
   canvas.height = ROWS * BLOCK;
+
+  // Mostrar controles táctiles en móvil
+  if (isMobile) document.getElementById('touch-controls').style.display = 'flex';
 
   const COLORS = [null,'#00ffcc','#ff00aa','#ffdd00','#00aaff','#ff6600','#aa00ff','#00ff66'];
   const PIECES = [
@@ -316,12 +386,12 @@
     document.getElementById('lines-display').textContent=lines;
   };
 
-  function drawBlock(context,x,y,colorId,alpha=1) {
+  function drawBlock(context, x, y, colorId, alpha=1, bk=BLOCK) {
     context.globalAlpha=alpha;
     context.fillStyle=COLORS[colorId];
-    context.fillRect(x*BLOCK+1,y*BLOCK+1,BLOCK-2,BLOCK-2);
+    context.fillRect(x*bk+1, y*bk+1, bk-2, bk-2);
     context.fillStyle='rgba(255,255,255,0.18)';
-    context.fillRect(x*BLOCK+2,y*BLOCK+2,BLOCK-4,3);
+    context.fillRect(x*bk+2, y*bk+2, bk-4, 3);
     context.globalAlpha=1;
   }
 
@@ -340,12 +410,12 @@
 
   function drawNext() {
     nctx.clearRect(0,0,nextCanvas.width,nextCanvas.height);
-    const shape=nextPiece.shape, bk=16;
+    const shape=nextPiece.shape, bk=13;
     const offX=Math.floor((nextCanvas.width/bk-shape[0].length)/2);
     const offY=Math.floor((nextCanvas.height/bk-shape.length)/2);
     for (let r=0;r<shape.length;r++) for (let c=0;c<shape[r].length;c++) if(shape[r][c]) {
       nctx.fillStyle=COLORS[shape[r][c]]; nctx.fillRect((offX+c)*bk+1,(offY+r)*bk+1,bk-2,bk-2);
-      nctx.fillStyle='rgba(255,255,255,0.18)'; nctx.fillRect((offX+c)*bk+2,(offY+r)*bk+2,bk-4,3);
+      nctx.fillStyle='rgba(255,255,255,0.18)'; nctx.fillRect((offX+c)*bk+2,(offY+r)*bk+2,bk-4,2);
     }
   }
 
@@ -379,6 +449,7 @@
     document.getElementById('overlay').style.display='flex';
   }
 
+  // ── FIREBASE ───────────────────────────────────────────────
   document.getElementById('btn-submit').addEventListener('click', async () => {
     const nameInput=document.getElementById('name-input');
     const name=nameInput.value.trim()||'ANÓNIMO';
@@ -393,17 +464,18 @@
     const entries=[];
     snapshot.forEach(child=>entries.push(child.val()));
     entries.sort((a,b)=>b.score-a.score);
-    if (!entries.length) { list.innerHTML='<div class="lb-empty">SIN PUNTAJES AÚN — ¡SEA EL PRIMERO!</div>'; return; }
+    if (!entries.length) { list.innerHTML='<div class="lb-empty">SIN PUNTAJES AÚN</div>'; return; }
     const rankLabels=['🥇','🥈','🥉'];
     const rankClasses=['gold','silver','bronze'];
     list.innerHTML=entries.map((e,i)=>`
-      <div class="lb-row" style="animation-delay:${i*0.05}s">
+      <div class="lb-row">
         <div class="lb-rank ${rankClasses[i]||''}">${rankLabels[i]||(i+1)}</div>
         <div class="lb-name">${e.name}</div>
         <div class="lb-score">${e.score.toLocaleString()}</div>
       </div>`).join('');
   });
 
+  // ── TECLADO ────────────────────────────────────────────────
   document.addEventListener('keydown', e=>{
     if (!started||gameOver) return;
     if (e.key==='p'||e.key==='P') { paused=!paused; if(!paused){lastTime=performance.now();animId=requestAnimationFrame(gameLoop);} return; }
@@ -418,7 +490,62 @@
     draw();
   });
 
-  document.getElementById('btn-start').addEventListener('click',startGame);
+  // ── CONTROLES TÁCTILES ─────────────────────────────────────
+  function addTouchBtn(id, action) {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+
+    let interval = null;
+    const isRepeat = ['btn-left','btn-right','btn-down'].includes(id);
+
+    const start = (e) => {
+      e.preventDefault();
+      if (!started || gameOver || paused) return;
+      btn.classList.add('pressed');
+      action();
+      draw();
+      if (isRepeat) {
+        interval = setInterval(() => { if (!paused && !gameOver) { action(); draw(); } }, 120);
+      }
+    };
+
+    const end = (e) => {
+      e.preventDefault();
+      btn.classList.remove('pressed');
+      if (interval) { clearInterval(interval); interval = null; }
+    };
+
+    btn.addEventListener('touchstart', start, { passive: false });
+    btn.addEventListener('touchend', end, { passive: false });
+    btn.addEventListener('mousedown', start);
+    btn.addEventListener('mouseup', end);
+  }
+
+  addTouchBtn('btn-left',   () => { if(!collides(current.shape,currentX-1,currentY)) currentX--; });
+  addTouchBtn('btn-right',  () => { if(!collides(current.shape,currentX+1,currentY)) currentX++; });
+  addTouchBtn('btn-down',   () => { if(!collides(current.shape,currentX,currentY+1)) currentY++; else place(); });
+  addTouchBtn('btn-rotate', () => { const rot=rotate(current.shape); if(!collides(rot,currentX,currentY)) current.shape=rot; });
+  addTouchBtn('btn-drop',   () => hardDrop());
+
+  // ── SWIPE ──────────────────────────────────────────────────
+  let touchStartX=0, touchStartY=0;
+  canvas.addEventListener('touchstart', e => {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  }, { passive: true });
+
+  canvas.addEventListener('touchend', e => {
+    if (!started || gameOver || paused) return;
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    const dy = e.changedTouches[0].clientY - touchStartY;
+    if (Math.abs(dx) < 10 && Math.abs(dy) < 10) {
+      const rot = rotate(current.shape);
+      if (!collides(rot, currentX, currentY)) current.shape = rot;
+      draw();
+    }
+  }, { passive: true });
+
+  document.getElementById('btn-start').addEventListener('click', startGame);
   board=createBoard(); draw();
 </script>
 </body>
