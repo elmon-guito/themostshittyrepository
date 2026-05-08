@@ -278,7 +278,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getDatabase, ref, push, query, orderByChild, limitToLast, onValue }
+  import { getDatabase, ref, set, get, query, orderByChild, limitToLast, onValue, child }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
   const firebaseConfig = {
@@ -450,24 +450,31 @@
   }
 
   // ── FIREBASE ───────────────────────────────────────────────
+  // Guarda solo el mejor puntaje por jugador usando su nombre como clave
   document.getElementById('btn-submit').addEventListener('click', async () => {
-    const nameInput=document.getElementById('name-input');
-    const name=nameInput.value.trim()||'ANÓNIMO';
-    await push(scoresRef,{name:name.toUpperCase(),score,date:Date.now()});
-    document.getElementById('name-section').style.display='none';
-    nameInput.value='';
+    const nameInput = document.getElementById('name-input');
+    const name = (nameInput.value.trim() || 'ANONIMO').toUpperCase().replace(/[.#$[\]]/g, '');
+    const playerRef = ref(db, 'scores/' + name);
+    const snapshot = await get(playerRef);
+    const existing = snapshot.exists() ? snapshot.val().score : 0;
+    if (score > existing) {
+      await set(playerRef, { name, score, date: Date.now() });
+    }
+    document.getElementById('name-section').style.display = 'none';
+    nameInput.value = '';
   });
 
-  const topQuery=query(scoresRef,orderByChild('score'),limitToLast(10));
-  onValue(topQuery,(snapshot)=>{
-    const list=document.getElementById('lb-list');
-    const entries=[];
-    snapshot.forEach(child=>entries.push(child.val()));
-    entries.sort((a,b)=>b.score-a.score);
-    if (!entries.length) { list.innerHTML='<div class="lb-empty">SIN PUNTAJES AÚN</div>'; return; }
-    const rankLabels=['🥇','🥈','🥉'];
-    const rankClasses=['gold','silver','bronze'];
-    list.innerHTML=entries.map((e,i)=>`
+  // Muestra top 10 en tiempo real
+  const topQuery = query(scoresRef, orderByChild('score'), limitToLast(10));
+  onValue(topQuery, (snapshot) => {
+    const list = document.getElementById('lb-list');
+    const entries = [];
+    snapshot.forEach(child => entries.push(child.val()));
+    entries.sort((a, b) => b.score - a.score);
+    if (!entries.length) { list.innerHTML = '<div class="lb-empty">SIN PUNTAJES AÚN</div>'; return; }
+    const rankLabels = ['🥇','🥈','🥉'];
+    const rankClasses = ['gold','silver','bronze'];
+    list.innerHTML = entries.map((e, i) => `
       <div class="lb-row">
         <div class="lb-rank ${rankClasses[i]||''}">${rankLabels[i]||(i+1)}</div>
         <div class="lb-name">${e.name}</div>
