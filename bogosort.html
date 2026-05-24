@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bogosort Compartido</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --border: #2a2a3d;
+    --accent: #ff3c6e;
+    --accent2: #3cffb4;
+    --accent3: #ffe03c;
+    --text: #e8e8f0;
+    --muted: #5a5a7a;
+    --bar-h: 180px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1rem 3rem;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse 60% 40% at 50% 0%, #ff3c6e18 0%, transparent 70%),
+                radial-gradient(ellipse 40% 30% at 80% 80%, #3cffb412 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+    position: relative;
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2rem, 6vw, 3.5rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent3) 60%, var(--accent2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 0.75rem;
+    margin-top: 0.5rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .live-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: #ff3c6e22;
+    border: 1px solid #ff3c6e55;
+    border-radius: 999px;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-top: 0.75rem;
+  }
+
+  .live-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.7); }
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem;
+    width: 100%;
+    max-width: 700px;
+    position: relative;
+  }
+
+  /* ── Visualizer ── */
+  .viz {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 6px;
+    height: var(--bar-h);
+    margin-bottom: 1.5rem;
+  }
+
+  .bar {
+    flex: 1;
+    border-radius: 4px 4px 0 0;
+    transition: height 0.25s cubic-bezier(.34,1.56,.64,1), background 0.25s;
+    position: relative;
+  }
+
+  .bar-label {
+    position: absolute;
+    bottom: -1.4rem;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.6rem;
+    color: var(--muted);
+  }
+
+  /* ── Stats ── */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .stat {
+    background: #ffffff08;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    text-align: center;
+  }
+
+  .stat-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--accent3);
+  }
+
+  .stat-label {
+    font-size: 0.6rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-top: 0.2rem;
+  }
+
+  /* ── Controls ── */
+  .controls {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  button {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    border: none;
+    border-radius: 8px;
+    padding: 0.65rem 1.25rem;
+    cursor: pointer;
+    transition: transform 0.1s, opacity 0.2s;
+    text-transform: uppercase;
+  }
+
+  button:active { transform: scale(0.96); }
+  button:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+    font-weight: 700;
+    flex: 1;
+  }
+
+  .btn-secondary {
+    background: #ffffff12;
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  .btn-stop {
+    background: #3cffb422;
+    color: var(--accent2);
+    border: 1px solid #3cffb444;
+  }
+
+  /* ── Array editor ── */
+  .array-editor {
+    margin-bottom: 1.5rem;
+  }
+
+  label {
+    display: block;
+    font-size: 0.65rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.5rem;
+  }
+
+  input[type="text"] {
+    width: 100%;
+    background: #ffffff08;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.85rem;
+    padding: 0.6rem 1rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  input[type="text"]:focus { border-color: var(--accent); }
+
+  /* ── Status ── */
+  .status-bar {
+    margin-top: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.7rem;
+    color: var(--muted);
+  }
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--muted);
+    flex-shrink: 0;
+  }
+
+  .status-dot.ok { background: var(--accent2); }
+  .status-dot.err { background: var(--accent); }
+  .status-dot.syncing { background: var(--accent3); animation: pulse 0.8s ease-in-out infinite; }
+
+  /* ── Sorted banner ── */
+  .sorted-banner {
+    display: none;
+    text-align: center;
+    padding: 0.75rem;
+    border-radius: 10px;
+    background: #3cffb418;
+    border: 1px solid #3cffb444;
+    color: var(--accent2);
+    font-size: 0.8rem;
+    margin-bottom: 1.25rem;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+
+  .sorted-banner.visible { display: block; }
+
+  /* ── Setup card ── */
+  .setup-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem;
+    width: 100%;
+    max-width: 700px;
+    margin-bottom: 1.5rem;
+  }
+
+  .setup-card h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    color: var(--accent3);
+  }
+
+  .setup-card p {
+    font-size: 0.72rem;
+    color: var(--muted);
+    line-height: 1.7;
+    margin-bottom: 1rem;
+  }
+
+  .code-block {
+    background: #000;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    font-size: 0.7rem;
+    color: var(--accent2);
+    overflow-x: auto;
+    white-space: pre;
+    margin-bottom: 1rem;
+  }
+
+  details summary {
+    cursor: pointer;
+    font-size: 0.7rem;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.5rem;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>BOGOSORT</h1>
+  <div class="subtitle">Algoritmo de ordenamiento por fuerza bruta aleatoria</div>
+  <div class="live-badge"><span class="live-dot"></span> Estado compartido en vivo</div>
+</header>
+
+<!-- Setup instructions -->
+<div class="setup-card" id="setupCard">
+  <h2>⚙️ Configuración rápida (solo una vez)</h2>
+  <p>Esta página usa <strong>JSONBin.io</strong> para compartir el estado entre todos los visitantes. Necesitas crear un bin gratuito y pegar el ID aquí.</p>
+  <details>
+    <summary>▶ Ver instrucciones</summary>
+    <p>1. Ve a <strong>jsonbin.io</strong> → Sign up gratis<br>
+    2. Crea un nuevo bin con este contenido inicial:</p>
+    <div class="code-block">{"array":[5,3,8,1,9,2,7,4,6],"attempts":0,"running":false,"sorted":false}</div>
+    <p>3. Copia tu <strong>BIN ID</strong> (algo como: <code>64abc...123</code>)<br>
+    4. Copia tu <strong>API KEY</strong> (en Account → API Keys → Master Key)<br>
+    5. Pégalos abajo:</p>
+  </details>
+
+  <div style="display:grid;gap:0.75rem;margin-top:1rem">
+    <div>
+      <label>BIN ID</label>
+      <input type="text" id="cfgBinId" placeholder="64abc123...">
+    </div>
+    <div>
+      <label>API KEY (Master Key)</label>
+      <input type="text" id="cfgApiKey" placeholder="$2b$10$...">
+    </div>
+    <button class="btn-primary" onclick="saveConfig()">Guardar y conectar</button>
+  </div>
+  <div class="status-bar" id="setupStatus">
+    <div class="status-dot" id="setupDot"></div>
+    <span id="setupMsg">Esperando configuración...</span>
+  </div>
+</div>
+
+<!-- Main bogosort card -->
+<div class="card" id="mainCard" style="display:none">
+  <div class="sorted-banner" id="sortedBanner">🎉 ¡Array ordenado! Intentos totales: <span id="finalAttempts">0</span></div>
+
+  <div class="viz" id="viz"></div>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-value" id="statAttempts">0</div>
+      <div class="stat-label">Intentos</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" id="statSize">—</div>
+      <div class="stat-label">Elementos</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" id="statStatus">—</div>
+      <div class="stat-label">Estado</div>
+    </div>
+  </div>
+
+  <div class="array-editor">
+    <label>Array (editar y presionar Enter o "Aplicar")</label>
+    <input type="text" id="arrayInput" placeholder="5, 3, 8, 1, 9, 2, 7, 4, 6">
+  </div>
+
+  <div class="controls">
+    <button class="btn-primary" id="btnStart" onclick="startSort()">▶ Iniciar</button>
+    <button class="btn-stop" id="btnStop" onclick="stopSort()" disabled>■ Detener</button>
+    <button class="btn-secondary" onclick="applyCustomArray()">Aplicar array</button>
+    <button class="btn-secondary" onclick="resetSort()">↺ Reiniciar</button>
+  </div>
+
+  <div class="status-bar">
+    <div class="status-dot" id="statusDot"></div>
+    <span id="statusMsg">Conectado — sincronizando cada 2s</span>
+  </div>
+</div>
+
+<script>
+// ─── Config ───────────────────────────────────────────────
+const POLL_MS = 2000;        // sync interval for non-running state
+const POLL_ACTIVE_MS = 800;  // sync interval when running
+const COLORS = ['#ff3c6e','#ff6b3c','#ffbb3c','#ffe03c','#b4ff3c','#3cffb4','#3ce8ff','#3c8eff','#8e3cff','#e03cff'];
+
+let CFG = { binId: '', apiKey: '' };
+let localState = null;
+let running = false;
+let pollTimer = null;
+let sortTimer = null;
+let isMaster = false; // this tab drives the sort
+let lastEtag = null;
+
+// ─── Config persistence ────────────────────────────────────
+function loadConfig() {
+  const saved = localStorage.getItem('bogosort_cfg');
+  if (saved) {
+    CFG = JSON.parse(saved);
+    if (CFG.binId && CFG.apiKey) {
+      document.getElementById('cfgBinId').value = CFG.binId;
+      document.getElementById('cfgApiKey').value = CFG.apiKey;
+      connect();
+    }
+  }
+}
+
+function saveConfig() {
+  CFG.binId = document.getElementById('cfgBinId').value.trim();
+  CFG.apiKey = document.getElementById('cfgApiKey').value.trim();
+  if (!CFG.binId || !CFG.apiKey) {
+    setSetupStatus('err', 'Falta el BIN ID o el API Key');
+    return;
+  }
+  localStorage.setItem('bogosort_cfg', JSON.stringify(CFG));
+  connect();
+}
+
+// ─── JSONBin API ───────────────────────────────────────────
+async function getState() {
+  const r = await fetch(`https://api.jsonbin.io/v3/b/${CFG.binId}/latest`, {
+    headers: { 'X-Master-Key': CFG.apiKey }
+  });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  lastEtag = r.headers.get('ETag');
+  const d = await r.json();
+  return d.record;
+}
+
+async function putState(state) {
+  const r = await fetch(`https://api.jsonbin.io/v3/b/${CFG.binId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Master-Key': CFG.apiKey,
+      'X-Bin-Versioning': 'false'
+    },
+    body: JSON.stringify(state)
+  });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return (await r.json()).record;
+}
+
+// ─── Connect & poll ────────────────────────────────────────
+async function connect() {
+  setSetupStatus('syncing', 'Conectando...');
+  try {
+    localState = await getState();
+    setSetupStatus('ok', '✓ Conectado correctamente');
+    setTimeout(() => {
+      document.getElementById('setupCard').style.display = 'none';
+      document.getElementById('mainCard').style.display = 'block';
+      renderState(localState);
+      startPolling();
+    }, 800);
+  } catch(e) {
+    setSetupStatus('err', `Error: ${e.message} — revisa el BIN ID y la API Key`);
+  }
+}
+
+function startPolling() {
+  if (pollTimer) clearInterval(pollTimer);
+  pollTimer = setInterval(poll, localState?.running ? POLL_ACTIVE_MS : POLL_MS);
+}
+
+async function poll() {
+  try {
+    const state = await getState();
+    // If another tab changed running to true, let them be master
+    if (state.running && !isMaster) {
+      localState = state;
+      renderState(state);
+      setStatus('ok', 'Observando — otro usuario está sorteando');
+    } else if (!state.running && isMaster) {
+      // Someone stopped remotely
+      isMaster = false;
+      clearTimeout(sortTimer);
+      running = false;
+      localState = state;
+      renderState(state);
+      setStatus('ok', 'Detenido por otro usuario');
+    } else if (!isMaster) {
+      localState = state;
+      renderState(state);
+    }
+    // Adjust poll rate
+    clearInterval(pollTimer);
+    pollTimer = setInterval(poll, state.running ? POLL_ACTIVE_MS : POLL_MS);
+  } catch(e) {
+    setStatus('err', `Error de sync: ${e.message}`);
+  }
+}
+
+// ─── Bogosort logic ────────────────────────────────────────
+function isSorted(arr) {
+  for (let i = 1; i < arr.length; i++) if (arr[i] < arr[i-1]) return false;
+  return true;
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+async function startSort() {
+  if (running) return;
+  running = true;
+  isMaster = true;
+
+  const state = { ...localState, running: true, sorted: false };
+  localState = await putState(state);
+  renderState(localState);
+  setStatus('syncing', 'Sorteando...');
+
+  document.getElementById('btnStart').disabled = true;
+  document.getElementById('btnStop').disabled = false;
+
+  sortLoop();
+}
+
+function sortLoop() {
+  if (!running || !isMaster) return;
+
+  const arr = shuffle(localState.array);
+  const attempts = localState.attempts + 1;
+
+  if (isSorted(arr)) {
+    // Done!
+    const finalState = { array: arr, attempts, running: false, sorted: true };
+    putState(finalState).then(s => {
+      localState = s;
+      renderState(s);
+      running = false;
+      isMaster = false;
+      setStatus('ok', '¡Ordenado!');
+      document.getElementById('btnStart').disabled = false;
+      document.getElementById('btnStop').disabled = true;
+    });
+  } else {
+    localState = { ...localState, array: arr, attempts };
+    renderState(localState);
+
+    // Push to remote every N attempts to avoid rate limits
+    if (attempts % 5 === 0) {
+      putState(localState).catch(() => {});
+    }
+
+    // 16ms ≈ 60fps
+    sortTimer = setTimeout(sortLoop, 16);
+  }
+}
+
+async function stopSort() {
+  running = false;
+  isMaster = false;
+  clearTimeout(sortTimer);
+
+  const state = { ...localState, running: false };
+  localState = await putState(state);
+  renderState(localState);
+  setStatus('ok', 'Detenido');
+  document.getElementById('btnStart').disabled = false;
+  document.getElementById('btnStop').disabled = true;
+}
+
+async function resetSort() {
+  running = false;
+  isMaster = false;
+  clearTimeout(sortTimer);
+
+  const arr = parseArrayInput() || localState.array;
+  const state = { array: arr, attempts: 0, running: false, sorted: false };
+  localState = await putState(state);
+  renderState(localState);
+  setStatus('ok', 'Reiniciado');
+  document.getElementById('btnStart').disabled = false;
+  document.getElementById('btnStop').disabled = true;
+}
+
+function parseArrayInput() {
+  const raw = document.getElementById('arrayInput').value;
+  if (!raw.trim()) return null;
+  const nums = raw.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
+  if (nums.length < 2) return null;
+  return nums;
+}
+
+async function applyCustomArray() {
+  const arr = parseArrayInput();
+  if (!arr) { alert('Array inválido. Usa números separados por comas.'); return; }
+  if (arr.length > 9) { alert('Máximo 9 elementos (¡o esperarás mucho!)'); return; }
+  const state = { array: arr, attempts: 0, running: false, sorted: false };
+  localState = await putState(state);
+  renderState(localState);
+  setStatus('ok', 'Array actualizado para todos');
+}
+
+// ─── Render ────────────────────────────────────────────────
+function renderState(s) {
+  if (!s) return;
+  const arr = s.array;
+  const max = Math.max(...arr);
+
+  // Bars
+  const viz = document.getElementById('viz');
+  viz.innerHTML = '';
+  arr.forEach((v, i) => {
+    const bar = document.createElement('div');
+    bar.className = 'bar';
+    bar.style.height = `${(v / max) * 100}%`;
+    bar.style.background = `linear-gradient(180deg, ${COLORS[i % COLORS.length]}, ${COLORS[(i+3) % COLORS.length]}55)`;
+    const lbl = document.createElement('div');
+    lbl.className = 'bar-label';
+    lbl.textContent = v;
+    bar.appendChild(lbl);
+    viz.appendChild(bar);
+  });
+
+  // Stats
+  document.getElementById('statAttempts').textContent = s.attempts.toLocaleString();
+  document.getElementById('statSize').textContent = arr.length;
+  document.getElementById('statStatus').textContent = s.sorted ? '✓' : s.running ? '...' : '⏸';
+
+  // Sorted banner
+  const banner = document.getElementById('sortedBanner');
+  if (s.sorted) {
+    banner.classList.add('visible');
+    document.getElementById('finalAttempts').textContent = s.attempts.toLocaleString();
+  } else {
+    banner.classList.remove('visible');
+  }
+
+  // Array input hint
+  if (!document.getElementById('arrayInput').value) {
+    document.getElementById('arrayInput').placeholder = arr.join(', ');
+  }
+
+  // Button states
+  if (!isMaster) {
+    document.getElementById('btnStart').disabled = s.running;
+    document.getElementById('btnStop').disabled = !s.running || !isMaster;
+  }
+}
+
+// ─── UI helpers ───────────────────────────────────────────
+function setSetupStatus(type, msg) {
+  const dot = document.getElementById('setupDot');
+  dot.className = `status-dot ${type}`;
+  document.getElementById('setupMsg').textContent = msg;
+}
+
+function setStatus(type, msg) {
+  const dot = document.getElementById('statusDot');
+  dot.className = `status-dot ${type}`;
+  document.getElementById('statusMsg').textContent = msg;
+}
+
+// Enter on array input
+document.getElementById('arrayInput')?.addEventListener('keydown', e => {
+  if (e.key === 'Enter') applyCustomArray();
+});
+
+// ─── Init ─────────────────────────────────────────────────
+loadConfig();
+</script>
+</body>
+</html>

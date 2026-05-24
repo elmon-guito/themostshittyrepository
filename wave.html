@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+  <title>WAVE</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet"/>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    body {
+      background:#050510; font-family:'Press Start 2P',monospace;
+      color:#e0e0ff; overflow:hidden; width:100vw; height:100vh;
+      touch-action:none; user-select:none;
+    }
+    #c { display:block; width:100vw; height:100vh; }
+    #hud {
+      position:fixed; top:14px; left:50%; transform:translateX(-50%);
+      display:flex; gap:14px; z-index:10; pointer-events:none;
+    }
+    .hud-box {
+      background:rgba(8,8,20,0.82); border:1px solid rgba(0,255,204,0.3);
+      padding:6px 14px; text-align:center;
+    }
+    .hud-label { font-size:6px; color:#444466; letter-spacing:.1em; margin-bottom:3px; }
+    .hud-val   { font-size:13px; color:#00ffcc; text-shadow:0 0 8px #00ffcc; }
+    #best-val  { color:#ff00aa; text-shadow:0 0 8px #ff00aa; }
+    #back { position:fixed; top:12px; left:12px; font-size:7px; color:#444466; text-decoration:none; z-index:20; letter-spacing:.1em; }
+    #back:hover { color:#e0e0ff; }
+
+    /* OVERLAY */
+    #overlay {
+      position:fixed; inset:0; background:rgba(5,5,16,0.93);
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      gap:18px; z-index:100; padding:20px;
+    }
+    #overlay h2 { font-size:clamp(16px,5vw,28px); color:#00ffcc; text-shadow:0 0 20px #00ffcc; letter-spacing:.25em; text-align:center; }
+    #overlay p  { font-size:7px; color:#555577; text-align:center; line-height:2.4; letter-spacing:.08em; }
+    .score-big  { font-size:clamp(14px,4vw,20px); color:#ff00aa; text-shadow:0 0 10px #ff00aa; }
+    #btn-play {
+      font-family:'Press Start 2P',monospace; font-size:clamp(8px,2.5vw,11px);
+      padding:14px 30px; background:transparent; border:2px solid #00ffcc;
+      color:#00ffcc; cursor:pointer; letter-spacing:.1em; transition:all .15s;
+    }
+    #btn-play:hover,#btn-play:active { background:#00ffcc; color:#050510; }
+    .name-form { display:flex; flex-direction:column; align-items:center; gap:10px; width:100%; max-width:280px; }
+    .name-form label { font-size:6px; color:#555577; letter-spacing:.15em; }
+    #name-inp {
+      font-family:'Press Start 2P',monospace; font-size:11px; padding:10px 16px;
+      background:rgba(8,8,20,.8); border:1px solid #00ffcc; color:#00ffcc;
+      text-align:center; outline:none; width:100%;
+    }
+    #name-inp::placeholder { color:#333355; }
+    #btn-save {
+      font-family:'Press Start 2P',monospace; font-size:8px; padding:10px 20px;
+      background:transparent; border:1px solid #ff00aa; color:#ff00aa;
+      cursor:pointer; transition:all .15s;
+    }
+    #btn-save:hover,#btn-save:active { background:#ff00aa; color:#050510; }
+
+    /* LEADERBOARD */
+    #lb-wrap {
+      position:fixed; right:10px; top:50%; transform:translateY(-50%);
+      width:150px; background:rgba(8,8,20,0.85);
+      border:1px solid rgba(0,255,204,0.25); padding:10px; z-index:10;
+    }
+    .lb-title { font-size:6px; color:#00ffcc; letter-spacing:.12em; margin-bottom:8px; text-align:center; }
+    .lb-row { display:flex; align-items:center; gap:6px; padding:4px 0; border-bottom:1px solid rgba(255,255,255,0.04); font-size:5.5px; }
+    .lb-row:last-child { border-bottom:none; }
+    .lb-rank { width:16px; color:#333355; text-align:center; flex-shrink:0; }
+    .lb-rank.gold   { color:#ffd700; }
+    .lb-rank.silver { color:#c0c0c0; }
+    .lb-rank.bronze { color:#cd7f32; }
+    .lb-name  { flex:1; color:#e0e0ff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .lb-score { color:#00ffcc; flex-shrink:0; }
+    .lb-empty { font-size:5px; color:#333355; text-align:center; padding:8px 0; }
+
+    /* TOUCH */
+    #touch-area {
+      position:fixed; inset:0; z-index:5;
+      display:none;
+    }
+  </style>
+</head>
+<body>
+<a href="index.html" id="back">← VOLVER</a>
+<canvas id="c"></canvas>
+<div id="hud">
+  <div class="hud-box"><div class="hud-label">SCORE</div><div class="hud-val" id="score-val">0</div></div>
+  <div class="hud-box"><div class="hud-label">MEJOR</div><div class="hud-val" id="best-val">0</div></div>
+</div>
+<div id="lb-wrap">
+  <div class="lb-title">🏆 TOP 10</div>
+  <div id="lb-list"><div class="lb-empty">Cargando...</div></div>
+</div>
+<div id="touch-area"></div>
+<div id="overlay">
+  <h2 id="ov-title">WAVE</h2>
+  <p id="ov-sub">MANTENÉ APRETADO PARA SUBIR<br/>SOLTÁ PARA BAJAR<br/>ESPACIO / TOQUE</p>
+  <div class="score-big" id="ov-score"></div>
+  <div id="name-sec" style="display:none" class="name-form">
+    <label>TU NOMBRE</label>
+    <input id="name-inp" maxlength="12" placeholder="JUGADOR" autocomplete="off"/>
+    <button id="btn-save">GUARDAR</button>
+  </div>
+  <button id="btn-play">JUGAR</button>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyDV0VHMK9fhCV72yJ2inExEsO9toACGm78",
+  authDomain:"leaderboartetrisproyect.firebaseapp.com",
+  databaseURL:"https://leaderboartetrisproyect-default-rtdb.firebaseio.com",
+  projectId:"leaderboartetrisproyect",
+  storageBucket:"leaderboartetrisproyect.firebasestorage.app",
+  messagingSenderId:"1039894129114",
+  appId:"1:1039894129114:web:2d36c3734154acd8d3f8e3"
+});
+const db = firebase.database();
+const waveRef = db.ref('wave_scores');
+
+// ── CANVAS ────────────────────────────────────────────────────
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+let W = window.innerWidth, H = window.innerHeight;
+canvas.width = W; canvas.height = H;
+
+// ── CONSTANTES ────────────────────────────────────────────────
+const PLAYER_X = W * 0.2;
+const PLAYER_SIZE = H * 0.022;
+const GRAVITY = 0.018;
+const LIFT = -0.022;
+const OBS_W = H * 0.04;
+const OBS_GAP = H * 0.28;
+const OBS_SPACING = W * 0.38;
+const COLORS = ['#00ffcc','#ff00aa','#ffdd00','#ff6600','#aa00ff','#0088ff'];
+
+// ── STATE ─────────────────────────────────────────────────────
+let playerY, playerVY, pressing;
+let obstacles, camX, speed, score, bestScore = 0;
+let running = false, animId;
+let bgOffset = 0;
+
+// Trail
+const trail = [];
+const TRAIL_LEN = 30;
+
+function randomColor() { return COLORS[Math.floor(Math.random() * COLORS.length)]; }
+
+function spawnObs(x) {
+  const topH = Math.random() * (H - OBS_GAP - H * 0.15) + H * 0.08;
+  return { x, topH, color: randomColor(), passed: false };
+}
+
+function resetGame() {
+  playerY = H / 2;
+  playerVY = 0;
+  pressing = false;
+  camX = 0;
+  speed = W * 0.004;
+  score = 0;
+  trail.length = 0;
+  obstacles = [];
+  for (let i = 0; i < 8; i++) {
+    obstacles.push(spawnObs(W * 0.6 + i * OBS_SPACING));
+  }
+  document.getElementById('score-val').textContent = '0';
+}
+
+// ── DRAW ──────────────────────────────────────────────────────
+function drawBg() {
+  // Fondo degradado
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, '#050518');
+  grad.addColorStop(1, '#0a0525');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  // Grid de puntos
+  ctx.fillStyle = 'rgba(0,255,204,0.06)';
+  const spacing = 40;
+  const offX = bgOffset % spacing;
+  for (let x = -offX; x < W + spacing; x += spacing) {
+    for (let y = 0; y < H; y += spacing) {
+      ctx.beginPath();
+      ctx.arc(x, y, 1.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // Bordes superior e inferior (paredes)
+  ctx.fillStyle = '#0d0d33';
+  ctx.fillRect(0, 0, W, H * 0.05);
+  ctx.fillRect(0, H - H * 0.05, W, H * 0.05);
+  // Brillo bordes
+  ctx.fillStyle = 'rgba(0,255,204,0.5)';
+  ctx.fillRect(0, H * 0.05 - 2, W, 2);
+  ctx.fillRect(0, H - H * 0.05, W, 2);
+}
+
+function drawTrail() {
+  for (let i = 0; i < trail.length; i++) {
+    const alpha = (1 - i / trail.length) * 0.6;
+    const size  = PLAYER_SIZE * (1 - i / trail.length * 0.7);
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = '#00ffcc';
+    ctx.beginPath();
+    ctx.moveTo(trail[i].x, trail[i].y);
+    ctx.lineTo(trail[i].x - size, trail[i].y - size * 0.5);
+    ctx.lineTo(trail[i].x - size, trail[i].y + size * 0.5);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+function drawPlayer() {
+  const x = PLAYER_X, y = playerY;
+  const s = PLAYER_SIZE;
+
+  // Sombra
+  ctx.fillStyle = 'rgba(0,255,204,0.2)';
+  ctx.beginPath();
+  ctx.ellipse(x, y + s + 4, s * 0.8, s * 0.2, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Rotación según velocidad
+  const angle = playerVY * 2;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(angle);
+
+  // Forma diamante (wave de GD)
+  ctx.beginPath();
+  ctx.moveTo(0, -s);
+  ctx.lineTo(s, 0);
+  ctx.lineTo(0, s);
+  ctx.lineTo(-s, 0);
+  ctx.closePath();
+
+  const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, s);
+  grad.addColorStop(0, '#ffffff');
+  grad.addColorStop(0.4, '#00ffcc');
+  grad.addColorStop(1, '#006655');
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Borde brillante
+  ctx.strokeStyle = '#00ffcc';
+  ctx.lineWidth = 2;
+  ctx.shadowColor = '#00ffcc';
+  ctx.shadowBlur = 12;
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Brillo interior
+  ctx.beginPath();
+  ctx.moveTo(0, -s * 0.5);
+  ctx.lineTo(s * 0.5, 0);
+  ctx.lineTo(0, s * 0.5);
+  ctx.lineTo(-s * 0.5, 0);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(255,255,255,0.25)';
+  ctx.fill();
+
+  ctx.restore();
+}
+
+function drawObstacle(obs) {
+  const sx = obs.x - camX;
+  if (sx > W + OBS_W || sx < -OBS_W) return;
+
+  ctx.shadowColor = obs.color;
+  ctx.shadowBlur = 14;
+  ctx.fillStyle = obs.color;
+
+  // Bloque superior
+  ctx.fillRect(sx - OBS_W / 2, H * 0.05, OBS_W, obs.topH - H * 0.05);
+  // Bloque inferior
+  ctx.fillRect(sx - OBS_W / 2, obs.topH + OBS_GAP, OBS_W, H - obs.topH - OBS_GAP);
+
+  // Brillo
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = 'rgba(255,255,255,0.2)';
+  ctx.fillRect(sx - OBS_W / 2, H * 0.05, 3, obs.topH - H * 0.05);
+  ctx.fillRect(sx - OBS_W / 2, obs.topH + OBS_GAP, 3, H - obs.topH - OBS_GAP);
+}
+
+// ── GAME LOOP ─────────────────────────────────────────────────
+function tick() {
+  if (!running) return;
+  animId = requestAnimationFrame(tick);
+
+  speed = Math.min(W * 0.004 + score * W * 0.00008, W * 0.014);
+  camX += speed;
+  bgOffset += speed * 0.5;
+
+  // Física
+  playerVY += pressing ? LIFT : GRAVITY;
+  playerVY = Math.max(-H * 0.018, Math.min(H * 0.018, playerVY));
+  playerY += playerVY * (H * 0.06);
+  playerY = Math.max(H * 0.05 + PLAYER_SIZE, Math.min(H - H * 0.05 - PLAYER_SIZE, playerY));
+
+  // Muerte por bordes
+  if (playerY <= H * 0.05 + PLAYER_SIZE || playerY >= H - H * 0.05 - PLAYER_SIZE) {
+    endGame(); return;
+  }
+
+  // Trail
+  trail.unshift({ x: PLAYER_X, y: playerY });
+  if (trail.length > TRAIL_LEN) trail.pop();
+
+  // Obstáculos
+  for (let i = obstacles.length - 1; i >= 0; i--) {
+    const o = obstacles[i];
+    const sx = o.x - camX;
+
+    // Reciclar
+    if (sx < -OBS_W * 2) {
+      const farthest = Math.max(...obstacles.map(ob => ob.x));
+      obstacles[i] = spawnObs(farthest + OBS_SPACING);
+      continue;
+    }
+
+    // Punto
+    if (!o.passed && sx < PLAYER_X - PLAYER_SIZE) {
+      o.passed = true;
+      score++;
+      document.getElementById('score-val').textContent = score;
+      if (score > bestScore) {
+        bestScore = score;
+        document.getElementById('best-val').textContent = bestScore;
+      }
+    }
+
+    // Colisión
+    if (Math.abs(sx - PLAYER_X) < OBS_W / 2 + PLAYER_SIZE * 0.8) {
+      const inGap = playerY > o.topH + PLAYER_SIZE * 0.8 && playerY < o.topH + OBS_GAP - PLAYER_SIZE * 0.8;
+      if (!inGap) { endGame(); return; }
+    }
+  }
+
+  // DRAW
+  drawBg();
+  obstacles.forEach(drawObstacle);
+  drawTrail();
+  drawPlayer();
+
+  // Score HUD en canvas
+  ctx.font = '0px Press Start 2P'; // fuerza carga fuente
+}
+
+function startGame() {
+  cancelAnimationFrame(animId);
+  resetGame();
+  running = true;
+  document.getElementById('overlay').style.display = 'none';
+  document.getElementById('name-sec').style.display = 'none';
+  document.getElementById('ov-score').textContent = '';
+  tick();
+}
+
+function endGame() {
+  running = false;
+  cancelAnimationFrame(animId);
+  document.getElementById('ov-title').textContent = 'GAME OVER';
+  document.getElementById('ov-sub').textContent = 'PUNTAJE FINAL';
+  document.getElementById('ov-score').textContent = score;
+  document.getElementById('btn-play').textContent = 'REINTENTAR';
+  if (score > 0) document.getElementById('name-sec').style.display = 'flex';
+  document.getElementById('overlay').style.display = 'flex';
+}
+
+// ── CONTROLES ─────────────────────────────────────────────────
+document.addEventListener('keydown', e => { if (e.code === 'Space' || e.key === 'ArrowUp') { e.preventDefault(); pressing = true; } });
+document.addEventListener('keyup',   e => { if (e.code === 'Space' || e.key === 'ArrowUp') pressing = false; });
+
+const isMobile = window.innerWidth < 900;
+if (isMobile) {
+  document.getElementById('touch-area').style.display = 'block';
+  document.getElementById('touch-area').addEventListener('touchstart', e => { e.preventDefault(); pressing = true; }, { passive: false });
+  document.getElementById('touch-area').addEventListener('touchend',   e => { e.preventDefault(); pressing = false; }, { passive: false });
+} else {
+  canvas.addEventListener('mousedown', () => pressing = true);
+  canvas.addEventListener('mouseup',   () => pressing = false);
+}
+
+document.getElementById('btn-play').addEventListener('click', startGame);
+
+// ── FIREBASE ──────────────────────────────────────────────────
+document.getElementById('btn-save').addEventListener('click', () => {
+  const inp  = document.getElementById('name-inp');
+  const name = (inp.value.trim() || 'ANONIMO').toUpperCase().replace(/[.#$[\]]/g, '');
+  const r    = db.ref('wave_scores/' + name);
+  r.once('value', snap => {
+    const existing = snap.exists() ? snap.val().score : 0;
+    if (score > existing) r.set({ name, score, date: Date.now() });
+  });
+  document.getElementById('name-sec').style.display = 'none';
+  inp.value = '';
+});
+
+waveRef.on('value', snap => {
+  const list = document.getElementById('lb-list');
+  const byName = {};
+  snap.forEach(child => {
+    const v = child.val();
+    if (!v || !v.name || typeof v.score !== 'number') return;
+    const n = v.name.toUpperCase();
+    if (!byName[n] || v.score > byName[n]) byName[n] = v.score;
+  });
+  const entries = Object.entries(byName).map(([n,s])=>({name:n,score:s}))
+    .sort((a,b)=>b.score-a.score).slice(0,10);
+  if (!entries.length) { list.innerHTML = '<div class="lb-empty">SIN PUNTAJES AÚN</div>'; return; }
+  const rl = ['🥇','🥈','🥉'], rc = ['gold','silver','bronze'];
+  list.innerHTML = entries.map((e,i) => `
+    <div class="lb-row">
+      <div class="lb-rank ${rc[i]||''}">${rl[i]||(i+1)}</div>
+      <div class="lb-name">${e.name}</div>
+      <div class="lb-score">${e.score}</div>
+    </div>`).join('');
+});
+
+window.addEventListener('resize', () => {
+  W = window.innerWidth; H = window.innerHeight;
+  canvas.width = W; canvas.height = H;
+});
+
+// Render inicial
+const grad = ctx.createLinearGradient(0,0,0,H);
+grad.addColorStop(0,'#050518'); grad.addColorStop(1,'#0a0525');
+ctx.fillStyle = grad; ctx.fillRect(0,0,W,H);
+</script>
+</body>
+</html>

@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quiz — Capitales de América</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0f14;
+      --surface: #161a24;
+      --border: #252a38;
+      --accent: #e8ff47;
+      --accent2: #47c6ff;
+      --accent3: #ff6b6b;
+      --text: #f0f2f8;
+      --muted: #6b7280;
+      --correct: #4ade80;
+      --wrong: #f87171;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem;
+      overflow-x: hidden;
+    }
+
+    /* Background grid */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(232,255,71,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(232,255,71,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 680px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* HEADER */
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+      animation: fadeDown 0.6s ease both;
+    }
+
+    .flag-strip {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2rem, 6vw, 3.2rem);
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+
+    h1 span {
+      color: var(--accent);
+    }
+
+    .subtitle {
+      color: var(--muted);
+      margin-top: 0.5rem;
+      font-size: 0.95rem;
+      font-weight: 300;
+    }
+
+    /* PROGRESS */
+    .progress-bar-wrap {
+      background: var(--border);
+      border-radius: 99px;
+      height: 6px;
+      margin-bottom: 1.5rem;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 99px;
+      transition: width 0.5s cubic-bezier(.4,0,.2,1);
+    }
+
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 0.4rem;
+    }
+
+    /* REGION BADGE */
+    .region-badge {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 0.25rem 0.75rem;
+      border-radius: 99px;
+      margin-bottom: 1rem;
+      border: 1px solid;
+    }
+
+    .badge-north  { color: var(--accent);  border-color: var(--accent);  background: rgba(232,255,71,0.07); }
+    .badge-center { color: var(--accent2); border-color: var(--accent2); background: rgba(71,198,255,0.07); }
+    .badge-south  { color: #c084fc;        border-color: #c084fc;        background: rgba(192,132,252,0.07); }
+
+    /* CARD */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2rem;
+      margin-bottom: 1.5rem;
+      animation: fadeUp 0.4s ease both;
+    }
+
+    .question-label {
+      font-size: 0.8rem;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 0.75rem;
+    }
+
+    .question-text {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.4rem, 4vw, 2rem);
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 1.5rem;
+    }
+
+    .question-text .country-name {
+      color: var(--accent);
+    }
+
+    /* INPUT */
+    .input-wrap {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      min-width: 180px;
+      background: var(--bg);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 1rem;
+      padding: 0.75rem 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input[type="text"]:focus { border-color: var(--accent); }
+    input[type="text"].correct { border-color: var(--correct); background: rgba(74,222,128,0.06); }
+    input[type="text"].wrong   { border-color: var(--wrong);   background: rgba(248,113,113,0.06); }
+
+    button {
+      cursor: pointer;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      border: none;
+      border-radius: 12px;
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      transition: transform 0.15s, opacity 0.15s;
+    }
+
+    button:active { transform: scale(0.97); }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #0d0f14;
+    }
+
+    .btn-primary:hover { opacity: 0.88; }
+
+    .btn-secondary {
+      background: var(--border);
+      color: var(--text);
+    }
+
+    /* FEEDBACK */
+    .feedback {
+      margin-top: 1rem;
+      padding: 0.85rem 1rem;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      display: none;
+    }
+
+    .feedback.correct {
+      display: block;
+      background: rgba(74,222,128,0.1);
+      color: var(--correct);
+      border: 1px solid rgba(74,222,128,0.25);
+    }
+
+    .feedback.wrong {
+      display: block;
+      background: rgba(248,113,113,0.1);
+      color: var(--wrong);
+      border: 1px solid rgba(248,113,113,0.25);
+    }
+
+    /* SCORE */
+    .score-strip {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .score-chip {
+      flex: 1;
+      min-width: 120px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1rem;
+      text-align: center;
+    }
+
+    .score-chip .num {
+      font-family: 'Syne', sans-serif;
+      font-size: 2rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .score-chip .lbl {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 0.25rem;
+    }
+
+    .chip-correct .num { color: var(--correct); }
+    .chip-wrong .num   { color: var(--wrong); }
+    .chip-total .num   { color: var(--accent); }
+
+    /* RESULTS */
+    #results-screen { display: none; text-align: center; animation: fadeUp 0.5s ease both; }
+
+    .big-score {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(4rem, 15vw, 7rem);
+      font-weight: 800;
+      line-height: 1;
+      color: var(--accent);
+    }
+
+    .big-score-label { color: var(--muted); margin-bottom: 2rem; font-size: 1rem; }
+
+    .results-list {
+      text-align: left;
+      margin: 1.5rem 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      max-height: 320px;
+      overflow-y: auto;
+      padding-right: 0.25rem;
+    }
+
+    .results-list::-webkit-scrollbar { width: 4px; }
+    .results-list::-webkit-scrollbar-track { background: transparent; }
+    .results-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+    .result-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.6rem 0.9rem;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      gap: 1rem;
+    }
+
+    .result-item.ok  { background: rgba(74,222,128,0.08);  border: 1px solid rgba(74,222,128,0.18); }
+    .result-item.bad { background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.18); }
+
+    .result-item .ri-country { font-weight: 400; color: var(--muted); }
+    .result-item .ri-right   { font-weight: 700; font-size: 0.85rem; }
+    .result-item.ok  .ri-right { color: var(--correct); }
+    .result-item.bad .ri-right { color: var(--wrong); }
+
+    /* REFERENCE TABLE */
+    details {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      margin-top: 1.5rem;
+    }
+
+    summary {
+      padding: 1rem 1.25rem;
+      cursor: pointer;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 0.95rem;
+      list-style: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      user-select: none;
+    }
+
+    summary::after { content: '▾'; color: var(--muted); }
+    details[open] summary::after { content: '▴'; }
+
+    .ref-section { padding: 0 1.25rem 1.25rem; }
+
+    .ref-title {
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 1rem 0 0.5rem;
+    }
+
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    th { text-align: left; color: var(--muted); font-weight: 400; padding: 0.3rem 0.5rem; font-size: 0.78rem; }
+    td { padding: 0.35rem 0.5rem; border-bottom: 1px solid var(--border); }
+    tr:last-child td { border-bottom: none; }
+
+    /* ANIMATIONS */
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      20%      { transform: translateX(-6px); }
+      60%      { transform: translateX(6px); }
+    }
+
+    .shake { animation: shake 0.35s ease; }
+
+    /* MODE SELECTOR */
+    .mode-selector {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 0.35rem;
+    }
+
+    .mode-btn {
+      flex: 1;
+      padding: 0.5rem;
+      font-size: 0.82rem;
+      border-radius: 10px;
+      background: transparent;
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 400;
+      letter-spacing: 0;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .mode-btn.active {
+      background: var(--accent);
+      color: #0d0f14;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="flag-strip">🌎🗺️🌍</div>
+    <h1>Capitales de <span>América</span></h1>
+    <p class="subtitle">Quiz de estudio — América del Norte, Central y del Sur</p>
+  </header>
+
+  <!-- QUIZ SCREEN -->
+  <div id="quiz-screen">
+
+    <div class="mode-selector">
+      <button class="mode-btn active" onclick="setMode('pais-capital')">País → Capital</button>
+      <button class="mode-btn" onclick="setMode('capital-pais')">Capital → País</button>
+    </div>
+
+    <div class="score-strip">
+      <div class="score-chip chip-correct">
+        <div class="num" id="score-correct">0</div>
+        <div class="lbl">Correctas</div>
+      </div>
+      <div class="score-chip chip-wrong">
+        <div class="num" id="score-wrong">0</div>
+        <div class="lbl">Incorrectas</div>
+      </div>
+      <div class="score-chip chip-total">
+        <div class="num" id="score-total">23</div>
+        <div class="lbl">Total</div>
+      </div>
+    </div>
+
+    <div class="progress-label">
+      <span id="prog-label">Pregunta 1 de 23</span>
+      <span id="prog-pct">0%</span>
+    </div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" id="prog-fill" style="width:0%"></div>
+    </div>
+
+    <div class="card" id="question-card">
+      <div class="question-label">¿Cuál es la capital de…?</div>
+      <div id="region-badge" class="region-badge badge-north">América del Norte</div>
+      <div class="question-text" id="question-text">
+        <span class="country-name" id="q-country">Canadá</span>
+      </div>
+      <div class="input-wrap">
+        <input type="text" id="answer-input" placeholder="Escribí la capital…" autocomplete="off" autocorrect="off" spellcheck="false" />
+        <button class="btn-primary" onclick="checkAnswer()">Verificar</button>
+      </div>
+      <div class="feedback" id="feedback"></div>
+    </div>
+
+    <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">
+      <button class="btn-secondary" style="flex:1" onclick="skipQuestion()">Saltar →</button>
+      <button class="btn-primary"   style="flex:1" id="next-btn" onclick="nextQuestion()" disabled>Siguiente →</button>
+    </div>
+
+  </div>
+
+  <!-- RESULTS SCREEN -->
+  <div id="results-screen">
+    <div class="big-score" id="result-pct">—</div>
+    <div class="big-score-label" id="result-label">—</div>
+
+    <div class="results-list" id="results-list"></div>
+
+    <button class="btn-primary" style="width:100%; margin-top:1rem;" onclick="restartQuiz()">Reiniciar quiz 🔁</button>
+  </div>
+
+  <!-- REFERENCE TABLE -->
+  <details>
+    <summary>📋 Tabla de referencia</summary>
+    <div class="ref-section">
+      <div class="ref-title">🌐 América del Norte</div>
+      <table>
+        <tr><th>País</th><th>Capital</th></tr>
+        <tr><td>Canadá</td><td>Ottawa</td></tr>
+        <tr><td>Estados Unidos</td><td>Washington D.C.</td></tr>
+        <tr><td>México</td><td>Ciudad de México</td></tr>
+      </table>
+      <div class="ref-title">🌿 América Central</div>
+      <table>
+        <tr><th>País</th><th>Capital</th></tr>
+        <tr><td>Guatemala</td><td>Ciudad de Guatemala</td></tr>
+        <tr><td>Belice</td><td>Belmopán</td></tr>
+        <tr><td>Honduras</td><td>Tegucigalpa</td></tr>
+        <tr><td>El Salvador</td><td>San Salvador</td></tr>
+        <tr><td>Nicaragua</td><td>Managua</td></tr>
+        <tr><td>Costa Rica</td><td>San José</td></tr>
+        <tr><td>Panamá</td><td>Ciudad de Panamá</td></tr>
+      </table>
+      <div class="ref-title">🏔️ América del Sur</div>
+      <table>
+        <tr><th>País</th><th>Capital</th></tr>
+        <tr><td>Colombia</td><td>Bogotá</td></tr>
+        <tr><td>Venezuela</td><td>Caracas</td></tr>
+        <tr><td>Ecuador</td><td>Quito</td></tr>
+        <tr><td>Perú</td><td>Lima</td></tr>
+        <tr><td>Bolivia</td><td>Sucre / La Paz</td></tr>
+        <tr><td>Brasil</td><td>Brasilia</td></tr>
+        <tr><td>Paraguay</td><td>Asunción</td></tr>
+        <tr><td>Uruguay</td><td>Montevideo</td></tr>
+        <tr><td>Argentina</td><td>Buenos Aires</td></tr>
+        <tr><td>Chile</td><td>Santiago</td></tr>
+        <tr><td>Guyana</td><td>Georgetown</td></tr>
+        <tr><td>Surinam</td><td>Paramaribo</td></tr>
+      </table>
+    </div>
+  </details>
+
+</div>
+
+<script>
+const DATA = [
+  // Norte
+  { country: "Canadá",         capital: "ottawa",             region: "norte" },
+  { country: "Estados Unidos", capital: "washington d.c.",    region: "norte" },
+  { country: "México",         capital: "ciudad de méxico",   region: "norte" },
+  // Central
+  { country: "Guatemala",      capital: "ciudad de guatemala",region: "central" },
+  { country: "Belice",         capital: "belmopán",           region: "central" },
+  { country: "Honduras",       capital: "tegucigalpa",        region: "central" },
+  { country: "El Salvador",    capital: "san salvador",       region: "central" },
+  { country: "Nicaragua",      capital: "managua",            region: "central" },
+  { country: "Costa Rica",     capital: "san josé",           region: "central" },
+  { country: "Panamá",         capital: "ciudad de panamá",   region: "central" },
+  // Sur
+  { country: "Colombia",       capital: "bogotá",             region: "sur" },
+  { country: "Venezuela",      capital: "caracas",            region: "sur" },
+  { country: "Ecuador",        capital: "quito",              region: "sur" },
+  { country: "Perú",           capital: "lima",               region: "sur" },
+  { country: "Bolivia",        capital: "sucre",              region: "sur", alt: ["la paz"] },
+  { country: "Brasil",         capital: "brasilia",           region: "sur" },
+  { country: "Paraguay",       capital: "asunción",           region: "sur" },
+  { country: "Uruguay",        capital: "montevideo",         region: "sur" },
+  { country: "Argentina",      capital: "buenos aires",       region: "sur" },
+  { country: "Chile",          capital: "santiago",           region: "sur" },
+  { country: "Guyana",         capital: "georgetown",         region: "sur" },
+  { country: "Surinam",        capital: "paramaribo",         region: "sur" },
+];
+
+const CAPITALS = DATA.map(d => ({ country: d.country, capital: d.capital, region: d.region, alt: d.alt }));
+
+let mode = "pais-capital";
+let queue = [];
+let current = 0;
+let correctCount = 0;
+let wrongCount = 0;
+let log = [];
+let answered = false;
+
+function normalize(s) {
+  return s.trim().toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .replace(/\./g, "");
+}
+
+function setMode(m) {
+  mode = m;
+  document.querySelectorAll('.mode-btn').forEach((b,i) => {
+    b.classList.toggle('active', (i===0 && m==='pais-capital') || (i===1 && m==='capital-pais'));
+  });
+  restartQuiz();
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function restartQuiz() {
+  queue = shuffle([...CAPITALS]);
+  current = 0; correctCount = 0; wrongCount = 0; log = [];
+  document.getElementById('results-screen').style.display = 'none';
+  document.getElementById('quiz-screen').style.display = 'block';
+  updateScore();
+  loadQuestion();
+}
+
+function regionLabel(r) {
+  if (r === 'norte')   return { text: 'América del Norte',   cls: 'badge-north' };
+  if (r === 'central') return { text: 'América Central',     cls: 'badge-center' };
+  return                      { text: 'América del Sur',     cls: 'badge-south'  };
+}
+
+function loadQuestion() {
+  if (current >= queue.length) { showResults(); return; }
+  answered = false;
+  const q = queue[current];
+  const badge = document.getElementById('region-badge');
+  const rl = regionLabel(q.region);
+  badge.textContent = rl.text;
+  badge.className = 'region-badge ' + rl.cls;
+
+  const qLabel = document.querySelector('.question-label');
+  const qCountry = document.getElementById('q-country');
+
+  if (mode === 'pais-capital') {
+    qLabel.textContent = '¿Cuál es la capital de…?';
+    qCountry.textContent = q.country;
+  } else {
+    qLabel.textContent = '¿En qué país está esta capital?';
+    qCountry.textContent = q.capital.charAt(0).toUpperCase() + q.capital.slice(1);
+  }
+
+  const inp = document.getElementById('answer-input');
+  inp.value = '';
+  inp.className = '';
+  inp.disabled = false;
+  inp.focus();
+
+  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('feedback').textContent = '';
+
+  document.getElementById('next-btn').disabled = true;
+
+  const total = queue.length;
+  document.getElementById('prog-label').textContent = `Pregunta ${current+1} de ${total}`;
+  const pct = Math.round((current / total) * 100);
+  document.getElementById('prog-pct').textContent = pct + '%';
+  document.getElementById('prog-fill').style.width = pct + '%';
+
+  // card re-animate
+  const card = document.getElementById('question-card');
+  card.style.animation = 'none';
+  card.offsetHeight;
+  card.style.animation = 'fadeUp 0.35s ease both';
+}
+
+function checkAnswer() {
+  if (answered) { nextQuestion(); return; }
+  const q = queue[current];
+  const inp = document.getElementById('answer-input');
+  const raw = inp.value;
+  if (!raw.trim()) return;
+
+  const userN = normalize(raw);
+  let correct;
+
+  if (mode === 'pais-capital') {
+    const correctN = normalize(q.capital);
+    const alts = (q.alt || []).map(normalize);
+    correct = userN === correctN || alts.includes(userN);
+  } else {
+    correct = normalize(q.country) === userN;
+  }
+
+  const fb = document.getElementById('feedback');
+
+  if (correct) {
+    correctCount++;
+    inp.className = 'correct';
+    fb.className = 'feedback correct';
+    fb.textContent = '✓ ¡Correcto!';
+  } else {
+    wrongCount++;
+    inp.className = 'wrong';
+    fb.className = 'feedback wrong';
+    const answer = mode === 'pais-capital' ? q.capital : q.country;
+    fb.textContent = `✗ La respuesta correcta es: ${answer.charAt(0).toUpperCase() + answer.slice(1)}`;
+    document.getElementById('question-card').classList.remove('shake');
+    document.getElementById('question-card').offsetHeight;
+    document.getElementById('question-card').classList.add('shake');
+  }
+
+  log.push({ q, userAnswer: raw, correct });
+  answered = true;
+  inp.disabled = true;
+  document.getElementById('next-btn').disabled = false;
+  updateScore();
+}
+
+function skipQuestion() {
+  if (answered) { nextQuestion(); return; }
+  const q = queue[current];
+  const inp = document.getElementById('answer-input');
+  const fb = document.getElementById('feedback');
+  wrongCount++;
+  inp.disabled = true;
+  fb.className = 'feedback wrong';
+  const answer = mode === 'pais-capital' ? q.capital : q.country;
+  fb.textContent = `→ Saltaste. La respuesta era: ${answer.charAt(0).toUpperCase() + answer.slice(1)}`;
+  log.push({ q, userAnswer: '(saltado)', correct: false });
+  answered = true;
+  document.getElementById('next-btn').disabled = false;
+  updateScore();
+}
+
+function nextQuestion() {
+  current++;
+  loadQuestion();
+}
+
+function updateScore() {
+  document.getElementById('score-correct').textContent = correctCount;
+  document.getElementById('score-wrong').textContent = wrongCount;
+}
+
+function showResults() {
+  document.getElementById('quiz-screen').style.display = 'none';
+  const rs = document.getElementById('results-screen');
+  rs.style.display = 'block';
+
+  const pct = Math.round((correctCount / queue.length) * 100);
+  document.getElementById('result-pct').textContent = pct + '%';
+
+  let label;
+  if (pct === 100) label = '¡Perfecto! 🏆 Sos un experto en geografía';
+  else if (pct >= 80) label = '¡Muy bien! 🌟 Estás listo para el examen';
+  else if (pct >= 60) label = 'Bien, pero repasá un poco más 📖';
+  else label = 'Seguí practicando, ¡vas a mejorar! 💪';
+  document.getElementById('result-label').textContent = label;
+
+  const list = document.getElementById('results-list');
+  list.innerHTML = '';
+  log.forEach(({ q, userAnswer, correct }) => {
+    const div = document.createElement('div');
+    div.className = 'result-item ' + (correct ? 'ok' : 'bad');
+    const question = mode === 'pais-capital' ? q.country : (q.capital.charAt(0).toUpperCase() + q.capital.slice(1));
+    const answer   = mode === 'pais-capital' ? q.capital : q.country;
+    div.innerHTML = `
+      <span class="ri-country">${question}</span>
+      <span class="ri-right">${correct ? '✓ ' + (userAnswer.charAt(0).toUpperCase()+userAnswer.slice(1)) : '✗ ' + (answer.charAt(0).toUpperCase()+answer.slice(1))}</span>
+    `;
+    list.appendChild(div);
+  });
+}
+
+// Enter key
+document.getElementById('answer-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    if (!answered) checkAnswer();
+    else nextQuestion();
+  }
+});
+
+// Init
+restartQuiz();
+</script>
+</body>
+</html>
